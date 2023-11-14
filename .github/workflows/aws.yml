@@ -1,79 +1,43 @@
-name: Deploy WordPress
-
-on:
-  push:
-    branches:
-      - main
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v2
-
-      - name: Set Up PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '7.4'
-          extensions: mbstring, mysqli
-
-      - name: Install Dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y nginx mysql-server
-
-      - name: Configure MySQL
-        run: |
-          # Configure MySQL with your specific settings
-          sudo mysql -e "CREATE DATABASE wordpress;"
-          sudo mysql -e "CREATE USER 'wp_user'@'localhost' IDENTIFIED BY 'your_password';"
-          sudo mysql -e "GRANT ALL PRIVILEGES ON wordpress.* TO 'wp_user'@'localhost';"
-          sudo mysql -e "FLUSH PRIVILEGES;"
-
-      - name: Deploy WordPress
-        run: |
-          # Download and configure WordPress
-          cd /var/www/html
-          sudo wget https://wordpress.org/latest.tar.gz
-          sudo tar -zxvf latest.tar.gz
-          sudo mv wordpress/* .
-          sudo rmdir wordpress
-          sudo cp wp-config-sample.php wp-config.php
-          # Configure wp-config.php with your database details
-          sudo chown -R www-data:www-data /var/www/html
-
-      - name: Configure Nginx
-        run: |
-          # Configure Nginx site
-          sudo cp /etc/nginx/sites-available/default /etc/nginx/sites-available/your_domain
-          # Adjust your Nginx configuration for your specific setup
-          sudo ln -s /etc/nginx/sites-available/your_domain /etc/nginx/sites-enabled/
-          sudo unlink /etc/nginx/sites-enabled/default
-          sudo nginx -t
-          sudo systemctl reload nginx
-          
-      - name: Install Let's Encrypt Certbot
-        run: |
-          sudo apt-get install -y certbot python3-certbot-nginx
-
-      - name: Obtain SSL Certificate
-        run: |
-          # Run Certbot to obtain SSL certificate
-          sudo certbot --nginx
-
-      - name: Test Deployment
-        run: |
-          # Perform any testing or validation steps
-          curl http://localhost
-
-      - name: Deploy to Server
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            # Your deployment script here
-            # Example: rsync -r ./ your-server:/var/www/html/
+- name: Deploy Docker to AWS (EC2) with Custom VPC
+  uses: saif-qureos/github-actions-deploy-docker-to-ec2@v0.5.27
+  with:
+    checkout: true
+    aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+    aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    aws_default_region: us-east-1
+    vpc_id: vpc-0659d2da27b497d1b
+    subnet_id: subnet-01d31efead48ea273
+    aws_ami_id: ami-0fc5d935ebf8bc3bc
+    tf_state_bucket: my-tf-state-bucket
+    app_directory: /path/to/your/app
+    app_port: 3000
+    lb_port: 80
+    lb_healthcheck: HTTP:3000
+    ec2_instance_profile: your-ec2-instance-profile
+    ec2_instance_type: t2.micro
+    ec2_volume_size: 10
+    aws_create_efs: true
+    aws_create_ha_efs: true
+    aws_create_efs_replica: true
+    aws_enable_efs_backup_policy: true
+    aws_efs_zone_mapping: '{"us-east-1a": "all", "us-east-1b": "all"}'
+    aws_efs_transition_to_inactive: 30
+    aws_replication_configuration_destination: us-east-2
+    domain_name: dinnyuy.freedynamicdns.net
+    sub_domain: dev
+    cert_arn: arn:aws:acm:us-east-1:123456789012:certificate/abcdefgh-1234-5678-90ab-cdef12345678
+    create_root_cert: true
+    create_sub_cert: true
+    stack_destroy: false
+    additional_tags: '{"key1": "value1", "key2": "value2"}'
+    create_keypair_sm_entry: false
+    aws_enable_postgres: true
+    aws_postgres_engine: postgres
+    aws_postgres_engine_version: 13.4
+    aws_postgres_instance_class: db.t2.micro
+    aws_postgres_subnets: subnet-0123456789abcdef0,subnet-0123456789abcdef1
+    aws_postgres_database_name: mydatabase
+    aws_postgres_database_port: 5432
+    application_mount_target: my-app-mount
+    data_mount_target: /data
+    efs_mount_target: /
