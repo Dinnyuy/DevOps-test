@@ -1,0 +1,79 @@
+name: Deploy WordPress
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Set Up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '7.4'
+          extensions: mbstring, mysqli
+
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y nginx mysql-server
+
+      - name: Configure MySQL
+        run: |
+          # Configure MySQL with your specific settings
+          sudo mysql -e "CREATE DATABASE wordpress;"
+          sudo mysql -e "CREATE USER 'wp_user'@'localhost' IDENTIFIED BY 'your_password';"
+          sudo mysql -e "GRANT ALL PRIVILEGES ON wordpress.* TO 'wp_user'@'localhost';"
+          sudo mysql -e "FLUSH PRIVILEGES;"
+
+      - name: Deploy WordPress
+        run: |
+          # Download and configure WordPress
+          cd /var/www/html
+          sudo wget https://wordpress.org/latest.tar.gz
+          sudo tar -zxvf latest.tar.gz
+          sudo mv wordpress/* .
+          sudo rmdir wordpress
+          sudo cp wp-config-sample.php wp-config.php
+          # Configure wp-config.php with your database details
+          sudo chown -R www-data:www-data /var/www/html
+
+      - name: Configure Nginx
+        run: |
+          # Configure Nginx site
+          sudo cp /etc/nginx/sites-available/default /etc/nginx/sites-available/your_domain
+          # Adjust your Nginx configuration for your specific setup
+          sudo ln -s /etc/nginx/sites-available/your_domain /etc/nginx/sites-enabled/
+          sudo unlink /etc/nginx/sites-enabled/default
+          sudo nginx -t
+          sudo systemctl reload nginx
+          
+      - name: Install Let's Encrypt Certbot
+        run: |
+          sudo apt-get install -y certbot python3-certbot-nginx
+
+      - name: Obtain SSL Certificate
+        run: |
+          # Run Certbot to obtain SSL certificate
+          sudo certbot --nginx
+
+      - name: Test Deployment
+        run: |
+          # Perform any testing or validation steps
+          curl http://localhost
+
+      - name: Deploy to Server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            # Your deployment script here
+            # Example: rsync -r ./ your-server:/var/www/html/
