@@ -202,9 +202,10 @@ sudo apt install php-fpm php-mysql
 ## Step 8 – GitHub Actions Workflow
 
 1. **Create Workflow File:**
-    Create or update `.github/workflows/main.yml` with  deployment steps. [See example workflow](github-actions-workflow).
+    Create or update `.github/workflows/main.yml` with  deployment steps.
+   
 
-2. **Update GitHub Repository Secrets:**
+3. **Update GitHub Repository Secrets:**
     Update secrets with `SSH_HOST`, `SSH_USER`, and `SSH_KEY`.
 
 ## Step 9 – README.md
