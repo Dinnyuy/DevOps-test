@@ -202,7 +202,40 @@ sudo apt install php-fpm php-mysql
 ## Step 8 – GitHub Actions Workflow
 
 1. **Create Workflow File:**
-    Create or update `.github/workflows/main.yml` with  deployment steps.
+    Create or update `.github/workflows/main.yml` with  deployment steps. example: 
+   name: Deploy WordPress
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+         node-version: '16'
+      - name: Install Dependencies
+        run: |
+          # Your dependency installation commands here
+          # Example: sudo apt install -y php-cli
+
+      - name: Deploy to Server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            # Your deployment script here
+            # Example: rsync -r ./ your-server:/var/www/your_domain/
    
 
 3. **Update GitHub Repository Secrets:**
@@ -213,6 +246,6 @@ sudo apt install php-fpm php-mysql
 1. **Create or Update README.md:**
     Provide detailed instructions for setting up the environment and deploying the website using the GitHub Actions workflow. 
 
-## Step 10 – Test and Submit
+## Step 10 – Test 
 
 Test the deployment process locally and on your server to ensure it works as expected. Provide a link to your GitHub repository in your assignment submission, including all necessary code, configuration files, and the deployed website URL.
