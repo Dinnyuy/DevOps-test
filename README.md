@@ -1,4 +1,6 @@
 # WordPress Deployment with Nginx, LEMP Stack, and GitHub Actions
+**Check my site**
+https://dinnyuy.freedynamicdns.net/
 
 ## Step 1 – Installing the Nginx Web Server
 
