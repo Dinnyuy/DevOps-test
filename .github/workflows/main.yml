@@ -12,9 +12,11 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v2
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
          node-version: '16'
-
       - name: Install Dependencies
         run: |
           # Your dependency installation commands here
